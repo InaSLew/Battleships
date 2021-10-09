@@ -47,12 +47,17 @@ namespace Battleships
         static void Main()
         {
             Console.WriteLine("Welcome to Battleships!");
-            Console.WriteLine("Where would you like to place your 5X ship?");
             Console.WriteLine();
             UpdatePlayerGrid();
+            Console.WriteLine("Where would you like to place your 5X ship?");
+            var position = Console.ReadLine();
+            Console.WriteLine("Horizontal? (y/n)");
+            var isHorizontal = Console.ReadLine() == "y";
+            var ship = new Ship(RowTitles.IndexOf(position[1]), ColumnTitles.IndexOf(position[0]), isHorizontal);
+            UpdatePlayerGrid(ship);
         }
 
-        private static void UpdatePlayerGrid()
+        private static void UpdatePlayerGrid(Ship shipToDraw = null)
         {
             var rows = playerGrid.GetLength(0);
             var cols = playerGrid.GetLength(1);
@@ -72,16 +77,31 @@ namespace Battleships
                         continue;
                     }
 
-                    // if (i == 1 && j == 2)
-                    // {
-                    //     tmp += "X_|";
-                    // }
-                    // else tmp += "__|";
-                    tmp += "__|";
+                    if (shipToDraw != null && i == shipToDraw.Position.Item1 + 1 && j == shipToDraw.Position.Item2 + 1) // a ship to draw!
+                    {
+                        tmp += "X_|";
+                    }
+                    else tmp += "__|";
                 }
                 Console.WriteLine(tmp);
             }
         }
     }
 
+    class Ship
+    {
+        private int row;
+        private int column;
+        public bool IsHorizontal {get;}
+        public (int, int) Position {get;}
+
+        public Ship(int row, int column, bool isHorizontal)
+        {
+            IsHorizontal = isHorizontal;
+            this.row = row;
+            this.column = column;
+            Position = (row, column);
+        }
+        
+    }
 }
