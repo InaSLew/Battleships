@@ -64,7 +64,7 @@ namespace Battleships
             for (var i = 0; i < rows; i++)
             {
                 var tmp = "";
-                for(var j = 0; j < cols; j++)
+                for(int j = 0; j < cols; j++)
                 {
                     if (i == 0 && j != 0)
                     {
@@ -77,9 +77,23 @@ namespace Battleships
                         continue;
                     }
 
-                    if (shipToDraw != null && i == shipToDraw.Position.Item1 + 1 && j == shipToDraw.Position.Item2 + 1) // a ship to draw!
+                    // if (shipToDraw != null && i == shipToDraw.Position.Item1 + 1 && j == shipToDraw.Position.Item2 + 1)
+                    if (shipToDraw != null)
                     {
-                        tmp += "X_|";
+                        var startRowPosition = shipToDraw.Position.Item1 + 1;
+                        var startColPosition = shipToDraw.Position.Item2 + 1;
+                        if (shipToDraw.IsHorizontal)
+                        {
+                            if (i == startRowPosition && j == startColPosition) tmp += "X_|";
+                            else if (i == startRowPosition && j == startColPosition + 1) tmp += "X_|";
+                            else tmp += "__|";
+                        }
+                        else
+                        {
+                            if (i == startRowPosition && j == startColPosition) tmp += "X_|";
+                            else if (i == startRowPosition + 1 && j == startColPosition) tmp += "X_|";
+                            else tmp += "__|";
+                        }
                     }
                     else tmp += "__|";
                 }
