@@ -7,12 +7,6 @@ namespace Battleships
     
     class Program
     {
-        // Two players
-        // 10x10 grid per player
-        // Ships: sizes 5,4,3,2,2
-        // Ships may be placed vertically or horizontally
-        //     ships may not overlap and may not touch each other
-        //     there needs to be at least one empty grid cell around the ship (in every direction)
         private static string ColumnTitles = "abcdefghij";
         private static string RowTitles = "0123456789";
         private static string[,] playerGrid = new string[11,11]
@@ -45,20 +39,85 @@ namespace Battleships
         };
 
         private static Player currentPlayer;
-        private static List<PlayerMoveLog> moveLog = new List<PlayerMoveLog>();
+        private static List<MoveLogEntry> moveLog = new List<MoveLogEntry>();
+        private static bool isStrikePhase;
+        private static bool isGameOver;
         
         static void Main()
         {
+            isGameOver = false;
             Console.WriteLine("Welcome to Battleships!");
             Console.WriteLine();
-            InitializePlayer1();
-            UpdatePlayerGrid();
+
+            isStrikePhase = false;
+            currentPlayer = Player.Player1;
+            Console.WriteLine("Player1's turn");
             Console.WriteLine("Where would you like to place your 5X ship?");
+            UpdateGrid(playerGrid);
             var position = Console.ReadLine();
             Console.WriteLine("Horizontal? (y/n)");
             var isHorizontal = Console.ReadLine() == "y";
-            var ship = new Ship(RowTitles.IndexOf(position[1]), ColumnTitles.IndexOf(position[0]), isHorizontal, 5);
-            UpdatePlayerGrid(ship);
+            var mark = new Mark(RowTitles.IndexOf(position[1]), ColumnTitles.IndexOf(position[0]), isHorizontal, 5);
+            UpdateGrid(playerGrid, markToDraw: mark);
+
+            currentPlayer = Player.Player2;
+            Console.WriteLine("Player2's turn");
+            Console.WriteLine("Where would you like to place your 5X ship?");
+            UpdateGrid(playerGrid);
+            var position2 = Console.ReadLine();
+            Console.WriteLine("Horizontal? (y/n)");
+            var isHorizontal2 = Console.ReadLine() == "y";
+            var mark2 = new Mark(RowTitles.IndexOf(position2[1]), ColumnTitles.IndexOf(position2[0]), isHorizontal2, 5);
+            UpdateGrid(playerGrid, markToDraw: mark2);
+
+            currentPlayer = Player.Player1;
+
+            while (!isGameOver)
+            {
+                isStrikePhase = true;
+                // UpdateGrid(playerGrid);
+                // Console.WriteLine("Where would you like to place your 5X ship?");
+                // var position = Console.ReadLine();
+                // Console.WriteLine("Horizontal? (y/n)");
+                // var isHorizontal = Console.ReadLine() == "y";
+                // var mark = new Mark(RowTitles.IndexOf(position[1]), ColumnTitles.IndexOf(position[0]), isHorizontal, 5);
+                // UpdateGrid(playerGrid, markToDraw: mark);
+                Console.WriteLine($"{currentPlayer}'s turn");
+                Console.WriteLine("Where would you like to strike?");
+                UpdateGrid(strikeGrid);
+                var strikePosition = Console.ReadLine();
+                CheckIsHit(strikePosition);
+                SwitchPlayer();
+            }
+        }
+
+        private static void SwitchPlayer()
+        {
+            currentPlayer = currentPlayer == Player.Player1 ? Player.Player2 : Player.Player1;
+        }
+
+        private static void CheckIsHit(string? strikePosition)
+        {
+            var rowPosition = RowTitles.IndexOf(strikePosition[1]) + 1;
+            var colPosition = ColumnTitles.IndexOf(strikePosition[0]) + 1;
+            var opponent = currentPlayer == Player.Player1 ? Player.Player2 : Player.Player1;
+            var isHit = false;
+            for (int i = 0; i < moveLog.Count; i++)
+            {
+                var tmp = moveLog[i];
+                var index = tmp.OccupiedPositions.FindIndex(x => x == (rowPosition, colPosition, false));
+                if (tmp.Player == opponent && index != -1)
+                {
+                    Console.WriteLine("HIT!");
+                    tmp.OccupiedPositions.ToArray()[index].Item3 = true;
+                    isHit = true;
+                    break;
+                }
+            }
+            if (!isHit) Console.WriteLine("MISSED :(");
+            var mark = new Mark(RowTitles.IndexOf(strikePosition[1]), ColumnTitles.IndexOf(strikePosition[0]), false,
+                1);
+            UpdateGrid(strikeGrid, sign: isHit ? "X" : "O", markToDraw: mark);
         }
 
         private static void InitializePlayer1()
@@ -66,14 +125,13 @@ namespace Battleships
             currentPlayer = Player.Player1;
         }
 
-        private static void UpdatePlayerGrid(Ship shipToDraw = null)
+        private static void UpdateGrid(string[,] targetGrid, string sign = "X", Mark markToDraw = null)
         {
-            var rows = playerGrid.GetLength(0);
-            var cols = playerGrid.GetLength(1);
-            var logEntry = new PlayerMoveLog(currentPlayer, shipToDraw);
+            var rows = targetGrid.GetLength(0);
+            var cols = targetGrid.GetLength(1);
+            var logEntry = new MoveLogEntry(currentPlayer, markToDraw, isStrikePhase);
             for (int i = 0, l = 0; i < rows; i++)
             {
-                // var logEntry = new PlayerMoveLog(currentPlayer, shipToDraw);
                 var tmp = "";
                 for(int j = 0, k = 0; j < cols; j++)
                 {
@@ -88,20 +146,19 @@ namespace Battleships
                         continue;
                     }
 
-                    if (shipToDraw != null)
+                    if (markToDraw != null)
                     {
-                        var startRowPosition = shipToDraw.StartPosition.Item1 + 1;
-                        var startColPosition = shipToDraw.StartPosition.Item2 + 1;
-                        var occupiedPosition = (-1, -1, false);
+                        var startRowPosition = markToDraw.StartPosition.Item1 + 1;
+                        var startColPosition = markToDraw.StartPosition.Item2 + 1;
 
-                        if (shipToDraw.IsHorizontal)
+                        if (markToDraw.IsHorizontal)
                         {
                             if (i == startRowPosition && j == startColPosition + k)
                             {
-                                tmp += "X_|";
+                                tmp += $"{sign}_|";
                                 logEntry.OccupiedPositions.Add((i, j, false));
                                 k++;
-                                if (k == shipToDraw.Size) k = 0;
+                                if (k == markToDraw.Size) k = 0;
                             }
                             else tmp += "__|";
                         }
@@ -109,38 +166,50 @@ namespace Battleships
                         {
                             if (i == startRowPosition + l && j == startColPosition)
                             {
-                                tmp += "X_|";
+                                tmp += $"{sign}_|";
                                 logEntry.OccupiedPositions.Add((i, j, false));
                                 l++;
-                                if (l == shipToDraw.Size) l = 0;
+                                if (l == markToDraw.Size) l = 0;
                             }
                             else tmp += "__|";
                         }
-
-                        // if (occupiedPosition.Item1 != -1 && occupiedPosition.Item2 != -1) logEntry.OccupiedPositions.Add(occupiedPosition);
                     }
                     else tmp += "__|";
                 }
-                // if (logEntry.OccupiedPositions.Any()) moveLog.Add(logEntry);
                 Console.WriteLine(tmp);
             }
-            if (logEntry.Ship != null) moveLog.Add(logEntry);
+            if (logEntry.Mark != null) moveLog.Add(logEntry);
         }
     }
 
-    class PlayerMoveLog
+    class MoveLogEntry
     {
         public Player Player {get;}
-        public Ship Ship {get;}
-        public List<(int, int, bool)> OccupiedPositions {get; set; }
+        public Mark Mark {get;}
+        private List<(int, int, bool)> occupiedPositions; 
+        public List<(int, int, bool)> OccupiedPositions {get => occupiedPositions; set => occupiedPositions = value; }
+        public bool IsStrikePhase { get; }
 
-        public PlayerMoveLog(Player currentPlayer, Ship ship)
+        public MoveLogEntry(Player currentPlayer, Mark mark, bool isStrikePhase)
         {
             Player = currentPlayer;
-            Ship = ship;
-            OccupiedPositions = new List<(int, int, bool)>();
+            Mark = mark;
+            occupiedPositions = new List<(int, int, bool)>();
+            IsStrikePhase = isStrikePhase;
         }
     }
+
+    // class StrikeLogEntry
+    // {
+    //     public Player Player { get; set; }
+    //     public List<(int, int, bool)> StrikePositions {get; set; }
+    //
+    //     public StrikeLogEntry(Player player)
+    //     {
+    //         Player = player;
+    //         StrikePositions = new List<(int, int, bool)>();
+    //     }
+    // }
 
     enum Player
     {
@@ -148,7 +217,7 @@ namespace Battleships
         Player2
     }
 
-    class Ship
+    class Mark
     {
         private int row;
         private int column;
@@ -156,7 +225,7 @@ namespace Battleships
         public (int, int) StartPosition {get;}
         public int Size {get;}
 
-        public Ship(int row, int column, bool isHorizontal, int size)
+        public Mark(int row, int column, bool isHorizontal, int size)
         {
             IsHorizontal = isHorizontal;
             this.row = row;
