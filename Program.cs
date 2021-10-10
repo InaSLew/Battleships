@@ -53,7 +53,7 @@ namespace Battleships
             var position = Console.ReadLine();
             Console.WriteLine("Horizontal? (y/n)");
             var isHorizontal = Console.ReadLine() == "y";
-            var ship = new Ship(RowTitles.IndexOf(position[1]), ColumnTitles.IndexOf(position[0]), isHorizontal);
+            var ship = new Ship(RowTitles.IndexOf(position[1]), ColumnTitles.IndexOf(position[0]), isHorizontal, 5);
             UpdatePlayerGrid(ship);
         }
 
@@ -61,10 +61,10 @@ namespace Battleships
         {
             var rows = playerGrid.GetLength(0);
             var cols = playerGrid.GetLength(1);
-            for (var i = 0; i < rows; i++)
+            for (int i = 0, l = 0; i < rows; i++)
             {
                 var tmp = "";
-                for(int j = 0; j < cols; j++)
+                for(int j = 0, k = 0; j < cols; j++)
                 {
                     if (i == 0 && j != 0)
                     {
@@ -77,21 +77,29 @@ namespace Battleships
                         continue;
                     }
 
-                    // if (shipToDraw != null && i == shipToDraw.Position.Item1 + 1 && j == shipToDraw.Position.Item2 + 1)
                     if (shipToDraw != null)
                     {
-                        var startRowPosition = shipToDraw.Position.Item1 + 1;
-                        var startColPosition = shipToDraw.Position.Item2 + 1;
+                        var startRowPosition = shipToDraw.StartPosition.Item1 + 1;
+                        var startColPosition = shipToDraw.StartPosition.Item2 + 1;
+
                         if (shipToDraw.IsHorizontal)
                         {
-                            if (i == startRowPosition && j == startColPosition) tmp += "X_|";
-                            else if (i == startRowPosition && j == startColPosition + 1) tmp += "X_|";
+                            if (i == startRowPosition && j == startColPosition + k)
+                            {
+                                tmp += "X_|";
+                                k++;
+                                if (k == shipToDraw.Size) k = 0;
+                            }
                             else tmp += "__|";
                         }
                         else
                         {
-                            if (i == startRowPosition && j == startColPosition) tmp += "X_|";
-                            else if (i == startRowPosition + 1 && j == startColPosition) tmp += "X_|";
+                            if (i == startRowPosition + l && j == startColPosition)
+                            {
+                                tmp += "X_|";
+                                l++;
+                                if (l == shipToDraw.Size) l = 0;
+                            }
                             else tmp += "__|";
                         }
                     }
@@ -107,14 +115,16 @@ namespace Battleships
         private int row;
         private int column;
         public bool IsHorizontal {get;}
-        public (int, int) Position {get;}
+        public (int, int) StartPosition {get;}
+        public int Size {get;}
 
-        public Ship(int row, int column, bool isHorizontal)
+        public Ship(int row, int column, bool isHorizontal, int size)
         {
             IsHorizontal = isHorizontal;
             this.row = row;
             this.column = column;
-            Position = (row, column);
+            StartPosition = (row, column);
+            Size = size;
         }
         
     }
