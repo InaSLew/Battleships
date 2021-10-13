@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Threading.Channels;
 
 namespace Battleships
 {
@@ -11,36 +12,49 @@ namespace Battleships
         private const int BiggestShipSize = 5;
         static void Main()
         {
-            var ships = new[]
-            {
-                new Ship(2),
-                new Ship(2),
-                new Ship(3),
-                new Ship(4),
-                new Ship(5)
-            };
             
             var player1 = new Player(PlayerName.Player1);
             //var player2 = new Player(PlayerName.Player2);
 
             DrawShipGrid(player1);
-            Console.WriteLine("On which column do you want to put your 3x ship?");
-            var colInput = Convert.ToInt32(Convert.ToChar(Console.ReadLine())) - AsciiOffset;
+            Console.WriteLine($"On which column do you want to put your 2x ship?");
+            var colInput = Convert.ToInt32(Char.Parse(Console.ReadLine())) - AsciiOffset;
             Console.WriteLine("On which row do you want to put your 3x ship?");
             var rowInput = int.Parse(Console.ReadLine() ?? string.Empty);
-            
-            var startingCell = new GridCell(colInput, rowInput, player1.Token);
-            WriteShipGrid(player1, startingCell);
+            Console.WriteLine("Horizontal? y/n");
+            var isHorizontal = Console.ReadLine() == "y";
+            var ship = new Ship(2, isHorizontal);
+            var startingCell = new GridCell(colInput, rowInput, CellType.ActiveShip, playerName: player1.PlayerName);
+            PlayerPlaceShips(player1, ship, startingCell);
+            //WriteShipGrid(player1, startingCell);
             
             DrawShipGrid(player1);
         }
 
-        private static void WriteShipGrid(Player player, GridCell startingCell)
+        private static void PlayerPlaceShips(Player player1, Ship ship, GridCell startingCell)
+        {
+            var col = startingCell.Column;
+            var row = startingCell.Row;
+            var cellType = startingCell.CellType;
+            var isHorizontal = ship.IsHorizontal;
+            for (var i = 0; i < ship.Size; i++)
+            {
+                WriteShipGrid(player1,
+                    isHorizontal ? new GridCell(col + i, row, cellType) : new GridCell(col, row + i, cellType));
+            }
+        }
+
+        private static void WriteShipGrid(Player player, GridCell cellToDraw)
         {
             var grid = player.ShipGrid;
-            var targetCol = startingCell.Column + ColumnOffset;
-            var targetRow = startingCell.Row + RowOffset;
-            if (grid[targetRow, targetCol].Token == "") grid[targetRow, targetCol].Token = startingCell.Token;
+            var targetCol = cellToDraw.Column + ColumnOffset;
+            var targetRow = cellToDraw.Row + RowOffset;
+            if (grid[targetRow, targetCol].Token == "")
+            {
+                grid[targetRow, targetCol].Token = player.Token;
+                grid[targetRow, targetCol].PlayerName = player.PlayerName;
+                grid[targetRow, targetCol].CellType = CellType.ActiveShip;
+            }
             else Console.WriteLine("Oops, position taken!");
         }
 
@@ -64,24 +78,27 @@ namespace Battleships
         }
     }
 
-    struct GridCell
+    class GridCell
     {
-        public GridCell(int column, int row, string token = "")
+        public GridCell(int column, int row, CellType cellType, string token = "", PlayerName? playerName = null)
         {
             Column = column;
             Row = row;
             Token = token;
-            CellType = CellType.Undecided;
+            CellType = cellType;
+            PlayerName = playerName;
         }
         public int Column { get; }
         public int Row { get; }
         public string Token { get; set; }
-        public CellType CellType { get; }
+        public CellType CellType { get; set; }
+        public PlayerName? PlayerName { get; set; }
     }
 
     internal enum CellType
     {
-        Ship,
+        ActiveShip,
+        DestroyedShip,
         Hit,
         Miss,
         Undecided
@@ -95,117 +112,117 @@ namespace Battleships
             ShipGrid = new GridCell[11, 11]
             {
                 {
-                    new GridCell(0, 0), new GridCell(0, 1), new GridCell(0, 2), new GridCell(0, 3), new GridCell(0, 4),
-                    new GridCell(0, 5), new GridCell(0, 6), new GridCell(0, 7), new GridCell(0, 8), new GridCell(0, 9),
-                    new GridCell(0, 10),
+                    new GridCell(0, 0, CellType.Undecided), new GridCell(0, 1, CellType.Undecided), new GridCell(0, 2, CellType.Undecided), new GridCell(0, 3, CellType.Undecided), new GridCell(0, 4, CellType.Undecided),
+                    new GridCell(0, 5, CellType.Undecided), new GridCell(0, 6, CellType.Undecided), new GridCell(0, 7, CellType.Undecided), new GridCell(0, 8, CellType.Undecided), new GridCell(0, 9, CellType.Undecided),
+                    new GridCell(0, 10, CellType.Undecided),
                 },
                 {
-                    new GridCell(1, 0), new GridCell(1, 1), new GridCell(1, 2), new GridCell(1, 3), new GridCell(1, 4),
-                    new GridCell(1, 5), new GridCell(1, 6), new GridCell(1, 7), new GridCell(1, 8), new GridCell(1, 9),
-                    new GridCell(1, 10),
+                    new GridCell(1, 0, CellType.Undecided), new GridCell(1, 1, CellType.Undecided), new GridCell(1, 2, CellType.Undecided), new GridCell(1, 3, CellType.Undecided), new GridCell(1, 4, CellType.Undecided),
+                    new GridCell(1, 5, CellType.Undecided), new GridCell(1, 6, CellType.Undecided), new GridCell(1, 7, CellType.Undecided), new GridCell(1, 8, CellType.Undecided), new GridCell(1, 9, CellType.Undecided),
+                    new GridCell(1, 10, CellType.Undecided),
                 },
                 {
-                    new GridCell(2, 0), new GridCell(2, 1), new GridCell(2, 2), new GridCell(2, 3), new GridCell(2, 4),
-                    new GridCell(2, 5), new GridCell(2, 6), new GridCell(2, 7), new GridCell(2, 8), new GridCell(2, 9),
-                    new GridCell(2, 10),
+                    new GridCell(2, 0, CellType.Undecided), new GridCell(2, 1, CellType.Undecided), new GridCell(2, 2, CellType.Undecided), new GridCell(2, 3, CellType.Undecided), new GridCell(2, 4, CellType.Undecided),
+                    new GridCell(2, 5, CellType.Undecided), new GridCell(2, 6, CellType.Undecided), new GridCell(2, 7, CellType.Undecided), new GridCell(2, 8, CellType.Undecided), new GridCell(2, 9, CellType.Undecided),
+                    new GridCell(2, 10, CellType.Undecided),
                 },
                 {
-                    new GridCell(3, 0), new GridCell(3, 1), new GridCell(3, 2), new GridCell(3, 3), new GridCell(3, 4),
-                    new GridCell(3, 5), new GridCell(3, 6), new GridCell(3, 7), new GridCell(3, 8), new GridCell(3, 9),
-                    new GridCell(3, 10),
+                    new GridCell(3, 0, CellType.Undecided), new GridCell(3, 1, CellType.Undecided), new GridCell(3, 2, CellType.Undecided), new GridCell(3, 3, CellType.Undecided), new GridCell(3, 4, CellType.Undecided),
+                    new GridCell(3, 5, CellType.Undecided), new GridCell(3, 6, CellType.Undecided), new GridCell(3, 7, CellType.Undecided), new GridCell(3, 8, CellType.Undecided), new GridCell(3, 9, CellType.Undecided),
+                    new GridCell(3, 10, CellType.Undecided),
                 },
                 {
-                    new GridCell(4, 0), new GridCell(4, 1), new GridCell(4, 2), new GridCell(4, 3), new GridCell(4, 4),
-                    new GridCell(4, 5), new GridCell(4, 6), new GridCell(4, 7), new GridCell(4, 8), new GridCell(4, 9),
-                    new GridCell(4, 10),
+                    new GridCell(4, 0, CellType.Undecided), new GridCell(4, 1, CellType.Undecided), new GridCell(4, 2, CellType.Undecided), new GridCell(4, 3, CellType.Undecided), new GridCell(4, 4, CellType.Undecided),
+                    new GridCell(4, 5, CellType.Undecided), new GridCell(4, 6, CellType.Undecided), new GridCell(4, 7, CellType.Undecided), new GridCell(4, 8, CellType.Undecided), new GridCell(4, 9, CellType.Undecided),
+                    new GridCell(4, 10, CellType.Undecided),
                 },
                 {
-                    new GridCell(5, 0), new GridCell(5, 1), new GridCell(5, 2), new GridCell(5, 3), new GridCell(5, 4),
-                    new GridCell(5, 5), new GridCell(5, 6), new GridCell(5, 7), new GridCell(5, 8), new GridCell(5, 9),
-                    new GridCell(5, 10),
+                    new GridCell(5, 0, CellType.Undecided), new GridCell(5, 1, CellType.Undecided), new GridCell(5, 2, CellType.Undecided), new GridCell(5, 3, CellType.Undecided), new GridCell(5, 4, CellType.Undecided),
+                    new GridCell(5, 5, CellType.Undecided), new GridCell(5, 6, CellType.Undecided), new GridCell(5, 7, CellType.Undecided), new GridCell(5, 8, CellType.Undecided), new GridCell(5, 9, CellType.Undecided),
+                    new GridCell(5, 10, CellType.Undecided),
                 },
                 {
-                    new GridCell(6, 0), new GridCell(6, 1), new GridCell(6, 2), new GridCell(6, 3), new GridCell(6, 4),
-                    new GridCell(6, 5), new GridCell(6, 6), new GridCell(6, 7), new GridCell(6, 8), new GridCell(6, 9),
-                    new GridCell(6, 10),
+                    new GridCell(6, 0, CellType.Undecided), new GridCell(6, 1, CellType.Undecided), new GridCell(6, 2, CellType.Undecided), new GridCell(6, 3, CellType.Undecided), new GridCell(6, 4, CellType.Undecided),
+                    new GridCell(6, 5, CellType.Undecided), new GridCell(6, 6, CellType.Undecided), new GridCell(6, 7, CellType.Undecided), new GridCell(6, 8, CellType.Undecided), new GridCell(6, 9, CellType.Undecided),
+                    new GridCell(6, 10, CellType.Undecided),
                 },
                 {
-                    new GridCell(7, 0), new GridCell(7, 1), new GridCell(7, 2), new GridCell(7, 3), new GridCell(7, 4),
-                    new GridCell(7, 5), new GridCell(7, 6), new GridCell(7, 7), new GridCell(7, 8), new GridCell(7, 9),
-                    new GridCell(7, 10),
+                    new GridCell(7, 0, CellType.Undecided), new GridCell(7, 1, CellType.Undecided), new GridCell(7, 2, CellType.Undecided), new GridCell(7, 3, CellType.Undecided), new GridCell(7, 4, CellType.Undecided),
+                    new GridCell(7, 5, CellType.Undecided), new GridCell(7, 6, CellType.Undecided), new GridCell(7, 7, CellType.Undecided), new GridCell(7, 8, CellType.Undecided), new GridCell(7, 9, CellType.Undecided),
+                    new GridCell(7, 10, CellType.Undecided),
                 },
                 {
-                    new GridCell(8, 0), new GridCell(8, 1), new GridCell(8, 2), new GridCell(8, 3), new GridCell(8, 4),
-                    new GridCell(8, 5), new GridCell(8, 6), new GridCell(8, 7), new GridCell(8, 8), new GridCell(8, 9),
-                    new GridCell(8, 10),
+                    new GridCell(8, 0, CellType.Undecided), new GridCell(8, 1, CellType.Undecided), new GridCell(8, 2, CellType.Undecided), new GridCell(8, 3, CellType.Undecided), new GridCell(8, 4, CellType.Undecided),
+                    new GridCell(8, 5, CellType.Undecided), new GridCell(8, 6, CellType.Undecided), new GridCell(8, 7, CellType.Undecided), new GridCell(8, 8, CellType.Undecided), new GridCell(8, 9, CellType.Undecided),
+                    new GridCell(8, 10, CellType.Undecided),
                 },
                 {
-                    new GridCell(9, 0), new GridCell(9, 1), new GridCell(9, 2), new GridCell(9, 3), new GridCell(9, 4),
-                    new GridCell(9, 5), new GridCell(9, 6), new GridCell(9, 7), new GridCell(9, 8), new GridCell(9, 9),
-                    new GridCell(9, 10),
+                    new GridCell(9, 0, CellType.Undecided), new GridCell(9, 1, CellType.Undecided), new GridCell(9, 2, CellType.Undecided), new GridCell(9, 3, CellType.Undecided), new GridCell(9, 4, CellType.Undecided),
+                    new GridCell(9, 5, CellType.Undecided), new GridCell(9, 6, CellType.Undecided), new GridCell(9, 7, CellType.Undecided), new GridCell(9, 8, CellType.Undecided), new GridCell(9, 9, CellType.Undecided),
+                    new GridCell(9, 10, CellType.Undecided),
                 },
                 {
-                    new GridCell(10, 0), new GridCell(10, 1), new GridCell(10, 2), new GridCell(10, 3),
-                    new GridCell(10, 4), new GridCell(10, 5), new GridCell(10, 6), new GridCell(10, 7),
-                    new GridCell(10, 8), new GridCell(10, 9), new GridCell(10, 10),
+                    new GridCell(10, 0, CellType.Undecided), new GridCell(10, 1, CellType.Undecided), new GridCell(10, 2, CellType.Undecided), new GridCell(10, 3, CellType.Undecided),
+                    new GridCell(10, 4, CellType.Undecided), new GridCell(10, 5, CellType.Undecided), new GridCell(10, 6, CellType.Undecided), new GridCell(10, 7, CellType.Undecided),
+                    new GridCell(10, 8, CellType.Undecided), new GridCell(10, 9, CellType.Undecided), new GridCell(10, 10, CellType.Undecided),
                 },
             };
             StrikeGrid = new GridCell[11, 11]
             {
                 {
-                    new GridCell(0, 0), new GridCell(0, 1), new GridCell(0, 2), new GridCell(0, 3), new GridCell(0, 4),
-                    new GridCell(0, 5), new GridCell(0, 6), new GridCell(0, 7), new GridCell(0, 8), new GridCell(0, 9),
-                    new GridCell(0, 10),
+                    new GridCell(0, 0, CellType.Undecided), new GridCell(0, 1, CellType.Undecided), new GridCell(0, 2, CellType.Undecided), new GridCell(0, 3, CellType.Undecided), new GridCell(0, 4, CellType.Undecided),
+                    new GridCell(0, 5, CellType.Undecided), new GridCell(0, 6, CellType.Undecided), new GridCell(0, 7, CellType.Undecided), new GridCell(0, 8, CellType.Undecided), new GridCell(0, 9, CellType.Undecided),
+                    new GridCell(0, 10, CellType.Undecided),
                 },
                 {
-                    new GridCell(1, 0), new GridCell(1, 1), new GridCell(1, 2), new GridCell(1, 3), new GridCell(1, 4),
-                    new GridCell(1, 5), new GridCell(1, 6), new GridCell(1, 7), new GridCell(1, 8), new GridCell(1, 9),
-                    new GridCell(1, 10),
+                    new GridCell(1, 0, CellType.Undecided), new GridCell(1, 1, CellType.Undecided), new GridCell(1, 2, CellType.Undecided), new GridCell(1, 3, CellType.Undecided), new GridCell(1, 4, CellType.Undecided),
+                    new GridCell(1, 5, CellType.Undecided), new GridCell(1, 6, CellType.Undecided), new GridCell(1, 7, CellType.Undecided), new GridCell(1, 8, CellType.Undecided), new GridCell(1, 9, CellType.Undecided),
+                    new GridCell(1, 10, CellType.Undecided),
                 },
                 {
-                    new GridCell(2, 0), new GridCell(2, 1), new GridCell(2, 2), new GridCell(2, 3), new GridCell(2, 4),
-                    new GridCell(2, 5), new GridCell(2, 6), new GridCell(2, 7), new GridCell(2, 8), new GridCell(2, 9),
-                    new GridCell(2, 10),
+                    new GridCell(2, 0, CellType.Undecided), new GridCell(2, 1, CellType.Undecided), new GridCell(2, 2, CellType.Undecided), new GridCell(2, 3, CellType.Undecided), new GridCell(2, 4, CellType.Undecided),
+                    new GridCell(2, 5, CellType.Undecided), new GridCell(2, 6, CellType.Undecided), new GridCell(2, 7, CellType.Undecided), new GridCell(2, 8, CellType.Undecided), new GridCell(2, 9, CellType.Undecided),
+                    new GridCell(2, 10, CellType.Undecided),
                 },
                 {
-                    new GridCell(3, 0), new GridCell(3, 1), new GridCell(3, 2), new GridCell(3, 3), new GridCell(3, 4),
-                    new GridCell(3, 5), new GridCell(3, 6), new GridCell(3, 7), new GridCell(3, 8), new GridCell(3, 9),
-                    new GridCell(3, 10),
+                    new GridCell(3, 0, CellType.Undecided), new GridCell(3, 1, CellType.Undecided), new GridCell(3, 2, CellType.Undecided), new GridCell(3, 3, CellType.Undecided), new GridCell(3, 4, CellType.Undecided),
+                    new GridCell(3, 5, CellType.Undecided), new GridCell(3, 6, CellType.Undecided), new GridCell(3, 7, CellType.Undecided), new GridCell(3, 8, CellType.Undecided), new GridCell(3, 9, CellType.Undecided),
+                    new GridCell(3, 10, CellType.Undecided),
                 },
                 {
-                    new GridCell(4, 0), new GridCell(4, 1), new GridCell(4, 2), new GridCell(4, 3), new GridCell(4, 4),
-                    new GridCell(4, 5), new GridCell(4, 6), new GridCell(4, 7), new GridCell(4, 8), new GridCell(4, 9),
-                    new GridCell(4, 10),
+                    new GridCell(4, 0, CellType.Undecided), new GridCell(4, 1, CellType.Undecided), new GridCell(4, 2, CellType.Undecided), new GridCell(4, 3, CellType.Undecided), new GridCell(4, 4, CellType.Undecided),
+                    new GridCell(4, 5, CellType.Undecided), new GridCell(4, 6, CellType.Undecided), new GridCell(4, 7, CellType.Undecided), new GridCell(4, 8, CellType.Undecided), new GridCell(4, 9, CellType.Undecided),
+                    new GridCell(4, 10, CellType.Undecided),
                 },
                 {
-                    new GridCell(5, 0), new GridCell(5, 1), new GridCell(5, 2), new GridCell(5, 3), new GridCell(5, 4),
-                    new GridCell(5, 5), new GridCell(5, 6), new GridCell(5, 7), new GridCell(5, 8), new GridCell(5, 9),
-                    new GridCell(5, 10),
+                    new GridCell(5, 0, CellType.Undecided), new GridCell(5, 1, CellType.Undecided), new GridCell(5, 2, CellType.Undecided), new GridCell(5, 3, CellType.Undecided), new GridCell(5, 4, CellType.Undecided),
+                    new GridCell(5, 5, CellType.Undecided), new GridCell(5, 6, CellType.Undecided), new GridCell(5, 7, CellType.Undecided), new GridCell(5, 8, CellType.Undecided), new GridCell(5, 9, CellType.Undecided),
+                    new GridCell(5, 10, CellType.Undecided),
                 },
                 {
-                    new GridCell(6, 0), new GridCell(6, 1), new GridCell(6, 2), new GridCell(6, 3), new GridCell(6, 4),
-                    new GridCell(6, 5), new GridCell(6, 6), new GridCell(6, 7), new GridCell(6, 8), new GridCell(6, 9),
-                    new GridCell(6, 10),
+                    new GridCell(6, 0, CellType.Undecided), new GridCell(6, 1, CellType.Undecided), new GridCell(6, 2, CellType.Undecided), new GridCell(6, 3, CellType.Undecided), new GridCell(6, 4, CellType.Undecided),
+                    new GridCell(6, 5, CellType.Undecided), new GridCell(6, 6, CellType.Undecided), new GridCell(6, 7, CellType.Undecided), new GridCell(6, 8, CellType.Undecided), new GridCell(6, 9, CellType.Undecided),
+                    new GridCell(6, 10, CellType.Undecided),
                 },
                 {
-                    new GridCell(7, 0), new GridCell(7, 1), new GridCell(7, 2), new GridCell(7, 3), new GridCell(7, 4),
-                    new GridCell(7, 5), new GridCell(7, 6), new GridCell(7, 7), new GridCell(7, 8), new GridCell(7, 9),
-                    new GridCell(7, 10),
+                    new GridCell(7, 0, CellType.Undecided), new GridCell(7, 1, CellType.Undecided), new GridCell(7, 2, CellType.Undecided), new GridCell(7, 3, CellType.Undecided), new GridCell(7, 4, CellType.Undecided),
+                    new GridCell(7, 5, CellType.Undecided), new GridCell(7, 6, CellType.Undecided), new GridCell(7, 7, CellType.Undecided), new GridCell(7, 8, CellType.Undecided), new GridCell(7, 9, CellType.Undecided),
+                    new GridCell(7, 10, CellType.Undecided),
                 },
                 {
-                    new GridCell(8, 0), new GridCell(8, 1), new GridCell(8, 2), new GridCell(8, 3), new GridCell(8, 4),
-                    new GridCell(8, 5), new GridCell(8, 6), new GridCell(8, 7), new GridCell(8, 8), new GridCell(8, 9),
-                    new GridCell(8, 10),
+                    new GridCell(8, 0, CellType.Undecided), new GridCell(8, 1, CellType.Undecided), new GridCell(8, 2, CellType.Undecided), new GridCell(8, 3, CellType.Undecided), new GridCell(8, 4, CellType.Undecided),
+                    new GridCell(8, 5, CellType.Undecided), new GridCell(8, 6, CellType.Undecided), new GridCell(8, 7, CellType.Undecided), new GridCell(8, 8, CellType.Undecided), new GridCell(8, 9, CellType.Undecided),
+                    new GridCell(8, 10, CellType.Undecided),
                 },
                 {
-                    new GridCell(9, 0), new GridCell(9, 1), new GridCell(9, 2), new GridCell(9, 3), new GridCell(9, 4),
-                    new GridCell(9, 5), new GridCell(9, 6), new GridCell(9, 7), new GridCell(9, 8), new GridCell(9, 9),
-                    new GridCell(9, 10),
+                    new GridCell(9, 0, CellType.Undecided), new GridCell(9, 1, CellType.Undecided), new GridCell(9, 2, CellType.Undecided), new GridCell(9, 3, CellType.Undecided), new GridCell(9, 4, CellType.Undecided),
+                    new GridCell(9, 5, CellType.Undecided), new GridCell(9, 6, CellType.Undecided), new GridCell(9, 7, CellType.Undecided), new GridCell(9, 8, CellType.Undecided), new GridCell(9, 9, CellType.Undecided),
+                    new GridCell(9, 10, CellType.Undecided),
                 },
                 {
-                    new GridCell(10, 0), new GridCell(10, 1), new GridCell(10, 2), new GridCell(10, 3),
-                    new GridCell(10, 4), new GridCell(10, 5), new GridCell(10, 6), new GridCell(10, 7),
-                    new GridCell(10, 8), new GridCell(10, 9), new GridCell(10, 10),
+                    new GridCell(10, 0, CellType.Undecided), new GridCell(10, 1, CellType.Undecided), new GridCell(10, 2, CellType.Undecided), new GridCell(10, 3, CellType.Undecided),
+                    new GridCell(10, 4, CellType.Undecided), new GridCell(10, 5, CellType.Undecided), new GridCell(10, 6, CellType.Undecided), new GridCell(10, 7, CellType.Undecided),
+                    new GridCell(10, 8, CellType.Undecided), new GridCell(10, 9, CellType.Undecided), new GridCell(10, 10, CellType.Undecided),
                 },
             };
             Token = "X";
@@ -218,7 +235,7 @@ namespace Battleships
 
     struct Ship
     {
-        public Ship(int size)
+        public Ship(int size, bool isHorizontal)
         {
             Size = size;
             Name = Size switch
@@ -228,9 +245,11 @@ namespace Battleships
                 3 => "Cruiser",
                 _ => "Destroyer"
             };
+            IsHorizontal = isHorizontal;
         }
         public string Name { get; }
         public int Size { get; }
+        public bool IsHorizontal { get; set; }
     }
 
     internal enum PlayerName
