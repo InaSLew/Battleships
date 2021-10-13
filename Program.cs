@@ -14,6 +14,38 @@ namespace Battleships
             // TODO Each grid should store information inside the cells
             // TODO A draw function to draw the grid and nothing else
             // TODO A write function to write onto the grid and nothing else
+            var player1 = new Player(PlayerName.Player1);
+            //var player2 = new Player(PlayerName.Player2);
+
+            DrawShipGrid(player1);
+            // ask for input
+            // WriteGrid(player1, col, row);
+        }
+
+        private static void DrawShipGrid(Player player)
+        {
+            var grid = player.ShipGrid;
+            var totalRows = grid.GetLength(0);
+            var totalColumns = grid.GetLength(1);
+            for (var rowIdx = 0; rowIdx < totalRows; rowIdx++)
+            {
+                var tmp = "";
+                for (var colIdx = 0; colIdx < totalColumns; colIdx++)
+                {
+                    if (rowIdx == 0 && colIdx >= 1)
+                    {
+                        tmp += $"_{Convert.ToChar(colIdx - 1 + 65)}|";
+                    }
+                    else if (colIdx == 0 && rowIdx >= 1)
+                    {
+                        tmp += $"_{rowIdx - 1}|";
+                    }
+                    else tmp += "__|";
+
+
+                }
+                Console.WriteLine(tmp);
+            }
         }
     }
 
