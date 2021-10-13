@@ -7,232 +7,169 @@ namespace Battleships
     
     class Program
     {
-        private static string ColumnTitles = "abcdefghij";
-        private static string RowTitles = "0123456789";
-        private static string[,] playerGrid = new string[11,11]
-        {
-            {"", "", "", "", "", "", "", "", "", "", ""},
-            {"", "", "", "", "", "", "", "", "", "", ""},
-            {"", "", "", "", "", "", "", "", "", "", ""},
-            {"", "", "", "", "", "", "", "", "", "", ""},
-            {"", "", "", "", "", "", "", "", "", "", ""},
-            {"", "", "", "", "", "", "", "", "", "", ""},
-            {"", "", "", "", "", "", "", "", "", "", ""},
-            {"", "", "", "", "", "", "", "", "", "", ""},
-            {"", "", "", "", "", "", "", "", "", "", ""},
-            {"", "", "", "", "", "", "", "", "", "", ""},
-            {"", "", "", "", "", "", "", "", "", "", ""}
-        };
-        private static string[,] strikeGrid = new string[11,11]
-        {
-            {"", "", "", "", "", "", "", "", "", "", ""},
-            {"", "", "", "", "", "", "", "", "", "", ""},
-            {"", "", "", "", "", "", "", "", "", "", ""},
-            {"", "", "", "", "", "", "", "", "", "", ""},
-            {"", "", "", "", "", "", "", "", "", "", ""},
-            {"", "", "", "", "", "", "", "", "", "", ""},
-            {"", "", "", "", "", "", "", "", "", "", ""},
-            {"", "", "", "", "", "", "", "", "", "", ""},
-            {"", "", "", "", "", "", "", "", "", "", ""},
-            {"", "", "", "", "", "", "", "", "", "", ""},
-            {"", "", "", "", "", "", "", "", "", "", ""}
-        };
 
-        private static Player currentPlayer;
-        private static List<MoveLogEntry> moveLog = new List<MoveLogEntry>();
-        private static bool isStrikePhase;
-        private static bool isGameOver;
-        
         static void Main()
         {
-            isGameOver = false;
-            Console.WriteLine("Welcome to Battleships!");
-            Console.WriteLine();
-
-            isStrikePhase = false;
-            currentPlayer = Player.Player1;
-            Console.WriteLine("Player1's turn");
-            Console.WriteLine("Where would you like to place your 5X ship?");
-            UpdateGrid(playerGrid);
-            var position = Console.ReadLine();
-            Console.WriteLine("Horizontal? (y/n)");
-            var isHorizontal = Console.ReadLine() == "y";
-            var mark = new Mark(RowTitles.IndexOf(position[1]), ColumnTitles.IndexOf(position[0]), isHorizontal, 5);
-            UpdateGrid(playerGrid, markToDraw: mark);
-
-            currentPlayer = Player.Player2;
-            Console.WriteLine("Player2's turn");
-            Console.WriteLine("Where would you like to place your 5X ship?");
-            UpdateGrid(playerGrid);
-            var position2 = Console.ReadLine();
-            Console.WriteLine("Horizontal? (y/n)");
-            var isHorizontal2 = Console.ReadLine() == "y";
-            var mark2 = new Mark(RowTitles.IndexOf(position2[1]), ColumnTitles.IndexOf(position2[0]), isHorizontal2, 5);
-            UpdateGrid(playerGrid, markToDraw: mark2);
-
-            currentPlayer = Player.Player1;
-
-            while (!isGameOver)
-            {
-                isStrikePhase = true;
-                // UpdateGrid(playerGrid);
-                // Console.WriteLine("Where would you like to place your 5X ship?");
-                // var position = Console.ReadLine();
-                // Console.WriteLine("Horizontal? (y/n)");
-                // var isHorizontal = Console.ReadLine() == "y";
-                // var mark = new Mark(RowTitles.IndexOf(position[1]), ColumnTitles.IndexOf(position[0]), isHorizontal, 5);
-                // UpdateGrid(playerGrid, markToDraw: mark);
-                Console.WriteLine($"{currentPlayer}'s turn");
-                Console.WriteLine("Where would you like to strike?");
-                UpdateGrid(strikeGrid);
-                var strikePosition = Console.ReadLine();
-                CheckIsHit(strikePosition);
-                SwitchPlayer();
-            }
-        }
-
-        private static void SwitchPlayer()
-        {
-            currentPlayer = currentPlayer == Player.Player1 ? Player.Player2 : Player.Player1;
-        }
-
-        private static void CheckIsHit(string? strikePosition)
-        {
-            var rowPosition = RowTitles.IndexOf(strikePosition[1]) + 1;
-            var colPosition = ColumnTitles.IndexOf(strikePosition[0]) + 1;
-            var opponent = currentPlayer == Player.Player1 ? Player.Player2 : Player.Player1;
-            var isHit = false;
-            for (int i = 0; i < moveLog.Count; i++)
-            {
-                var tmp = moveLog[i];
-                var index = tmp.OccupiedPositions.FindIndex(x => x == (rowPosition, colPosition, false));
-                if (tmp.Player == opponent && index != -1)
-                {
-                    Console.WriteLine("HIT!");
-                    tmp.OccupiedPositions.ToArray()[index].Item3 = true;
-                    isHit = true;
-                    break;
-                }
-            }
-            if (!isHit) Console.WriteLine("MISSED :(");
-            var mark = new Mark(RowTitles.IndexOf(strikePosition[1]), ColumnTitles.IndexOf(strikePosition[0]), false,
-                1);
-            UpdateGrid(strikeGrid, sign: isHit ? "X" : "O", markToDraw: mark);
-        }
-
-        private static void InitializePlayer1()
-        {
-            currentPlayer = Player.Player1;
-        }
-
-        private static void UpdateGrid(string[,] targetGrid, string sign = "X", Mark markToDraw = null)
-        {
-            var rows = targetGrid.GetLength(0);
-            var cols = targetGrid.GetLength(1);
-            var logEntry = new MoveLogEntry(currentPlayer, markToDraw, isStrikePhase);
-            for (int i = 0, l = 0; i < rows; i++)
-            {
-                var tmp = "";
-                for(int j = 0, k = 0; j < cols; j++)
-                {
-                    if (i == 0 && j != 0)
-                    {
-                        tmp += ColumnTitles[j-1] + "_|";
-                        continue;
-                    }
-                    if (i != 0 && j == 0)
-                    {
-                        tmp += RowTitles[i-1] + "_|";
-                        continue;
-                    }
-
-                    if (markToDraw != null)
-                    {
-                        var startRowPosition = markToDraw.StartPosition.Item1 + 1;
-                        var startColPosition = markToDraw.StartPosition.Item2 + 1;
-
-                        if (markToDraw.IsHorizontal)
-                        {
-                            if (i == startRowPosition && j == startColPosition + k)
-                            {
-                                tmp += $"{sign}_|";
-                                logEntry.OccupiedPositions.Add((i, j, false));
-                                k++;
-                                if (k == markToDraw.Size) k = 0;
-                            }
-                            else tmp += "__|";
-                        }
-                        else
-                        {
-                            if (i == startRowPosition + l && j == startColPosition)
-                            {
-                                tmp += $"{sign}_|";
-                                logEntry.OccupiedPositions.Add((i, j, false));
-                                l++;
-                                if (l == markToDraw.Size) l = 0;
-                            }
-                            else tmp += "__|";
-                        }
-                    }
-                    else tmp += "__|";
-                }
-                Console.WriteLine(tmp);
-            }
-            if (logEntry.Mark != null) moveLog.Add(logEntry);
+            // TODO Use 4 2D-arrays (each player got one ship grid and one strike grid)
+            // TODO Each grid should store information inside the cells
+            // TODO A draw function to draw the grid and nothing else
+            // TODO A write function to write onto the grid and nothing else
         }
     }
 
-    class MoveLogEntry
+    struct GridCell
     {
-        public Player Player {get;}
-        public Mark Mark {get;}
-        private List<(int, int, bool)> occupiedPositions; 
-        public List<(int, int, bool)> OccupiedPositions {get => occupiedPositions; set => occupiedPositions = value; }
-        public bool IsStrikePhase { get; }
-
-        public MoveLogEntry(Player currentPlayer, Mark mark, bool isStrikePhase)
+        public GridCell(int column, int row)
         {
-            Player = currentPlayer;
-            Mark = mark;
-            occupiedPositions = new List<(int, int, bool)>();
-            IsStrikePhase = isStrikePhase;
+            Column = column;
+            Row = row;
+            Token = "";
+            CellType = CellType.Undecided;
         }
+        public int Column { get; }
+        public int Row { get; }
+        public string Token { get; set; }
+        public CellType CellType { get; }
     }
 
-    // class StrikeLogEntry
-    // {
-    //     public Player Player { get; set; }
-    //     public List<(int, int, bool)> StrikePositions {get; set; }
-    //
-    //     public StrikeLogEntry(Player player)
-    //     {
-    //         Player = player;
-    //         StrikePositions = new List<(int, int, bool)>();
-    //     }
-    // }
+    internal enum CellType
+    {
+        Ship,
+        Hit,
+        Miss,
+        Undecided
+    }
 
-    enum Player
+    class Player
+    {
+        public Player(PlayerName playerName)
+        {
+            PlayerName = playerName;
+            ShipGrid = new GridCell[11, 11]
+            {
+                {
+                    new GridCell(0, 0), new GridCell(0, 1), new GridCell(0, 2), new GridCell(0, 3), new GridCell(0, 4),
+                    new GridCell(0, 5), new GridCell(0, 6), new GridCell(0, 7), new GridCell(0, 8), new GridCell(0, 9),
+                    new GridCell(0, 10),
+                },
+                {
+                    new GridCell(1, 0), new GridCell(1, 1), new GridCell(1, 2), new GridCell(1, 3), new GridCell(1, 4),
+                    new GridCell(1, 5), new GridCell(1, 6), new GridCell(1, 7), new GridCell(1, 8), new GridCell(1, 9),
+                    new GridCell(1, 10),
+                },
+                {
+                    new GridCell(2, 0), new GridCell(2, 1), new GridCell(2, 2), new GridCell(2, 3), new GridCell(2, 4),
+                    new GridCell(2, 5), new GridCell(2, 6), new GridCell(2, 7), new GridCell(2, 8), new GridCell(2, 9),
+                    new GridCell(2, 10),
+                },
+                {
+                    new GridCell(3, 0), new GridCell(3, 1), new GridCell(3, 2), new GridCell(3, 3), new GridCell(3, 4),
+                    new GridCell(3, 5), new GridCell(3, 6), new GridCell(3, 7), new GridCell(3, 8), new GridCell(3, 9),
+                    new GridCell(3, 10),
+                },
+                {
+                    new GridCell(4, 0), new GridCell(4, 1), new GridCell(4, 2), new GridCell(4, 3), new GridCell(4, 4),
+                    new GridCell(4, 5), new GridCell(4, 6), new GridCell(4, 7), new GridCell(4, 8), new GridCell(4, 9),
+                    new GridCell(4, 10),
+                },
+                {
+                    new GridCell(5, 0), new GridCell(5, 1), new GridCell(5, 2), new GridCell(5, 3), new GridCell(5, 4),
+                    new GridCell(5, 5), new GridCell(5, 6), new GridCell(5, 7), new GridCell(5, 8), new GridCell(5, 9),
+                    new GridCell(5, 10),
+                },
+                {
+                    new GridCell(6, 0), new GridCell(6, 1), new GridCell(6, 2), new GridCell(6, 3), new GridCell(6, 4),
+                    new GridCell(6, 5), new GridCell(6, 6), new GridCell(6, 7), new GridCell(6, 8), new GridCell(6, 9),
+                    new GridCell(6, 10),
+                },
+                {
+                    new GridCell(7, 0), new GridCell(7, 1), new GridCell(7, 2), new GridCell(7, 3), new GridCell(7, 4),
+                    new GridCell(7, 5), new GridCell(7, 6), new GridCell(7, 7), new GridCell(7, 8), new GridCell(7, 9),
+                    new GridCell(7, 10),
+                },
+                {
+                    new GridCell(8, 0), new GridCell(8, 1), new GridCell(8, 2), new GridCell(8, 3), new GridCell(8, 4),
+                    new GridCell(8, 5), new GridCell(8, 6), new GridCell(8, 7), new GridCell(8, 8), new GridCell(8, 9),
+                    new GridCell(8, 10),
+                },
+                {
+                    new GridCell(9, 0), new GridCell(9, 1), new GridCell(9, 2), new GridCell(9, 3), new GridCell(9, 4),
+                    new GridCell(9, 5), new GridCell(9, 6), new GridCell(9, 7), new GridCell(9, 8), new GridCell(9, 9),
+                    new GridCell(9, 10),
+                },
+                {
+                    new GridCell(10, 0), new GridCell(10, 1), new GridCell(10, 2), new GridCell(10, 3),
+                    new GridCell(10, 4), new GridCell(10, 5), new GridCell(10, 6), new GridCell(10, 7),
+                    new GridCell(10, 8), new GridCell(10, 9), new GridCell(10, 10),
+                },
+            };
+            StrikeGrid = new GridCell[11, 11]
+            {
+                {
+                    new GridCell(0, 0), new GridCell(0, 1), new GridCell(0, 2), new GridCell(0, 3), new GridCell(0, 4),
+                    new GridCell(0, 5), new GridCell(0, 6), new GridCell(0, 7), new GridCell(0, 8), new GridCell(0, 9),
+                    new GridCell(0, 10),
+                },
+                {
+                    new GridCell(1, 0), new GridCell(1, 1), new GridCell(1, 2), new GridCell(1, 3), new GridCell(1, 4),
+                    new GridCell(1, 5), new GridCell(1, 6), new GridCell(1, 7), new GridCell(1, 8), new GridCell(1, 9),
+                    new GridCell(1, 10),
+                },
+                {
+                    new GridCell(2, 0), new GridCell(2, 1), new GridCell(2, 2), new GridCell(2, 3), new GridCell(2, 4),
+                    new GridCell(2, 5), new GridCell(2, 6), new GridCell(2, 7), new GridCell(2, 8), new GridCell(2, 9),
+                    new GridCell(2, 10),
+                },
+                {
+                    new GridCell(3, 0), new GridCell(3, 1), new GridCell(3, 2), new GridCell(3, 3), new GridCell(3, 4),
+                    new GridCell(3, 5), new GridCell(3, 6), new GridCell(3, 7), new GridCell(3, 8), new GridCell(3, 9),
+                    new GridCell(3, 10),
+                },
+                {
+                    new GridCell(4, 0), new GridCell(4, 1), new GridCell(4, 2), new GridCell(4, 3), new GridCell(4, 4),
+                    new GridCell(4, 5), new GridCell(4, 6), new GridCell(4, 7), new GridCell(4, 8), new GridCell(4, 9),
+                    new GridCell(4, 10),
+                },
+                {
+                    new GridCell(5, 0), new GridCell(5, 1), new GridCell(5, 2), new GridCell(5, 3), new GridCell(5, 4),
+                    new GridCell(5, 5), new GridCell(5, 6), new GridCell(5, 7), new GridCell(5, 8), new GridCell(5, 9),
+                    new GridCell(5, 10),
+                },
+                {
+                    new GridCell(6, 0), new GridCell(6, 1), new GridCell(6, 2), new GridCell(6, 3), new GridCell(6, 4),
+                    new GridCell(6, 5), new GridCell(6, 6), new GridCell(6, 7), new GridCell(6, 8), new GridCell(6, 9),
+                    new GridCell(6, 10),
+                },
+                {
+                    new GridCell(7, 0), new GridCell(7, 1), new GridCell(7, 2), new GridCell(7, 3), new GridCell(7, 4),
+                    new GridCell(7, 5), new GridCell(7, 6), new GridCell(7, 7), new GridCell(7, 8), new GridCell(7, 9),
+                    new GridCell(7, 10),
+                },
+                {
+                    new GridCell(8, 0), new GridCell(8, 1), new GridCell(8, 2), new GridCell(8, 3), new GridCell(8, 4),
+                    new GridCell(8, 5), new GridCell(8, 6), new GridCell(8, 7), new GridCell(8, 8), new GridCell(8, 9),
+                    new GridCell(8, 10),
+                },
+                {
+                    new GridCell(9, 0), new GridCell(9, 1), new GridCell(9, 2), new GridCell(9, 3), new GridCell(9, 4),
+                    new GridCell(9, 5), new GridCell(9, 6), new GridCell(9, 7), new GridCell(9, 8), new GridCell(9, 9),
+                    new GridCell(9, 10),
+                },
+                {
+                    new GridCell(10, 0), new GridCell(10, 1), new GridCell(10, 2), new GridCell(10, 3),
+                    new GridCell(10, 4), new GridCell(10, 5), new GridCell(10, 6), new GridCell(10, 7),
+                    new GridCell(10, 8), new GridCell(10, 9), new GridCell(10, 10),
+                },
+            };
+        }
+        public GridCell[,] ShipGrid { get; set; }
+        public GridCell[,] StrikeGrid { get; set; }
+        public PlayerName PlayerName { get; }
+    }
+
+    internal enum PlayerName
     {
         Player1,
         Player2
-    }
-
-    class Mark
-    {
-        private int row;
-        private int column;
-        public bool IsHorizontal {get;}
-        public (int, int) StartPosition {get;}
-        public int Size {get;}
-
-        public Mark(int row, int column, bool isHorizontal, int size)
-        {
-            IsHorizontal = isHorizontal;
-            this.row = row;
-            this.column = column;
-            StartPosition = (row, column);
-            Size = size;
-        }
-        
     }
 }
