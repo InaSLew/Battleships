@@ -1,25 +1,47 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Linq;
 
 namespace Battleships
 {
     
     class Program
     {
-
+        private const int AsciiOffset = 65;
+        private const int ColumnOffset = 1;
+        private const int RowOffset = 1;
+        private const int BiggestShipSize = 5;
         static void Main()
         {
-            // TODO Use 4 2D-arrays (each player got one ship grid and one strike grid)
-            // TODO Each grid should store information inside the cells
-            // TODO A draw function to draw the grid and nothing else
-            // TODO A write function to write onto the grid and nothing else
+            var ships = new[]
+            {
+                new Ship(2),
+                new Ship(2),
+                new Ship(3),
+                new Ship(4),
+                new Ship(5)
+            };
+            
             var player1 = new Player(PlayerName.Player1);
             //var player2 = new Player(PlayerName.Player2);
 
             DrawShipGrid(player1);
-            // ask for input
-            // WriteGrid(player1, col, row);
+            Console.WriteLine("On which column do you want to put your 3x ship?");
+            var colInput = Convert.ToInt32(Convert.ToChar(Console.ReadLine())) - AsciiOffset;
+            Console.WriteLine("On which row do you want to put your 3x ship?");
+            var rowInput = int.Parse(Console.ReadLine() ?? string.Empty);
+            
+            var startingCell = new GridCell(colInput, rowInput, player1.Token);
+            WriteShipGrid(player1, startingCell);
+            
+            DrawShipGrid(player1);
+        }
+
+        private static void WriteShipGrid(Player player, GridCell startingCell)
+        {
+            var grid = player.ShipGrid;
+            var targetCol = startingCell.Column + ColumnOffset;
+            var targetRow = startingCell.Row + RowOffset;
+            if (grid[targetRow, targetCol].Token == "") grid[targetRow, targetCol].Token = startingCell.Token;
+            else Console.WriteLine("Oops, position taken!");
         }
 
         private static void DrawShipGrid(Player player)
@@ -32,17 +54,10 @@ namespace Battleships
                 var tmp = "";
                 for (var colIdx = 0; colIdx < totalColumns; colIdx++)
                 {
-                    if (rowIdx == 0 && colIdx >= 1)
-                    {
-                        tmp += $"_{Convert.ToChar(colIdx - 1 + 65)}|";
-                    }
-                    else if (colIdx == 0 && rowIdx >= 1)
-                    {
-                        tmp += $"_{rowIdx - 1}|";
-                    }
+                    if (rowIdx == 0 && colIdx >= 1) tmp += $"_{Convert.ToChar(colIdx - ColumnOffset + AsciiOffset)}|";
+                    else if (colIdx == 0 && rowIdx >= 1) tmp += $"_{rowIdx - RowOffset}|";
+                    else if (grid[rowIdx, colIdx].Token != "") tmp += $"{grid[rowIdx, colIdx].Token}_|";
                     else tmp += "__|";
-
-
                 }
                 Console.WriteLine(tmp);
             }
@@ -51,11 +66,11 @@ namespace Battleships
 
     struct GridCell
     {
-        public GridCell(int column, int row)
+        public GridCell(int column, int row, string token = "")
         {
             Column = column;
             Row = row;
-            Token = "";
+            Token = token;
             CellType = CellType.Undecided;
         }
         public int Column { get; }
@@ -193,10 +208,29 @@ namespace Battleships
                     new GridCell(10, 8), new GridCell(10, 9), new GridCell(10, 10),
                 },
             };
+            Token = "X";
         }
         public GridCell[,] ShipGrid { get; set; }
         public GridCell[,] StrikeGrid { get; set; }
         public PlayerName PlayerName { get; }
+        public string Token { get; }
+    }
+
+    struct Ship
+    {
+        public Ship(int size)
+        {
+            Size = size;
+            Name = Size switch
+            {
+                5 => "Carrier",
+                4 => "Battleship",
+                3 => "Cruiser",
+                _ => "Destroyer"
+            };
+        }
+        public string Name { get; }
+        public int Size { get; }
     }
 
     internal enum PlayerName
