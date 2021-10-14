@@ -10,37 +10,39 @@ namespace Battleships
         private const int ColumnOffset = 1;
         private const int RowOffset = 1;
         private const int BiggestShipSize = 5;
-        static void Main()
-        {
-            
-            var player1 = new Player(PlayerName.Player1);
-            //var player2 = new Player(PlayerName.Player2);
 
+        private static void Main()
+        {
+            var ships = new[]
+            {
+                new Ship(2), new Ship(2), new Ship(3), new Ship(4), new Ship(5)
+            };
+            var player1 = new Player(PlayerName.Player1);
             DrawShipGrid(player1);
-            Console.WriteLine($"On which column do you want to put your 2x ship?");
-            var colInput = Convert.ToInt32(Char.Parse(Console.ReadLine())) - AsciiOffset;
-            Console.WriteLine("On which row do you want to put your 3x ship?");
-            var rowInput = int.Parse(Console.ReadLine() ?? string.Empty);
-            Console.WriteLine("Horizontal? y/n");
-            var isHorizontal = Console.ReadLine() == "y";
-            var ship = new Ship(2, isHorizontal);
-            var startingCell = new GridCell(colInput, rowInput, CellType.ActiveShip, playerName: player1.PlayerName);
-            PlayerPlaceShips(player1, ship, startingCell);
-            //WriteShipGrid(player1, startingCell);
-            
+            PlayerPlaceShips(player1, ships);
             DrawShipGrid(player1);
         }
 
-        private static void PlayerPlaceShips(Player player1, Ship ship, GridCell startingCell)
+        private static void PlayerPlaceShips(Player player1, Ship[] ships)
         {
-            var col = startingCell.Column;
-            var row = startingCell.Row;
-            var cellType = startingCell.CellType;
-            var isHorizontal = ship.IsHorizontal;
-            for (var i = 0; i < ship.Size; i++)
+            foreach (var ship in ships)
             {
-                WriteShipGrid(player1,
-                    isHorizontal ? new GridCell(col + i, row, cellType) : new GridCell(col, row + i, cellType));
+                // TODO input validation to avoid incorrect format exception
+                Console.WriteLine($"On which column do you want to place your {ship.Size}x {ship.Name}?");
+                var col = Convert.ToInt32(Convert.ToChar(Console.ReadLine().ToUpper())) - AsciiOffset;
+                Console.WriteLine($"On which row do you want to place your {ship.Size}x {ship.Name}?");
+                var row = Convert.ToInt32(Console.ReadLine());
+                Console.WriteLine("Horizontal? y/n");
+                var isHorizontal = Console.ReadLine() == "y";
+                ship.IsHorizontal = isHorizontal;
+                for (var i = 0; i < ship.Size; i++)
+                {
+                    var targetCell = isHorizontal
+                        ? new GridCell(col + i, row, CellType.ActiveShip)
+                        : new GridCell(col, row + i, CellType.ActiveShip);
+                    targetCell.ShipId = ship.id;
+                    WriteShipGrid(player1, targetCell);
+                }
             }
         }
 
@@ -54,6 +56,7 @@ namespace Battleships
                 grid[targetRow, targetCol].Token = player.Token;
                 grid[targetRow, targetCol].PlayerName = player.PlayerName;
                 grid[targetRow, targetCol].CellType = CellType.ActiveShip;
+                grid[targetRow, targetCol].ShipId = cellToDraw.ShipId;
             }
             else Console.WriteLine("Oops, position taken!");
         }
@@ -93,6 +96,7 @@ namespace Battleships
         public string Token { get; set; }
         public CellType CellType { get; set; }
         public PlayerName? PlayerName { get; set; }
+        public int ShipId { get; set; }
     }
 
     internal enum CellType
@@ -233,10 +237,13 @@ namespace Battleships
         public string Token { get; }
     }
 
-    struct Ship
+    class Ship
     {
-        public Ship(int size, bool isHorizontal)
+        public readonly int id;
+        private static int nextId;
+        public Ship(int size)
         {
+            id = nextId++;
             Size = size;
             Name = Size switch
             {
@@ -245,7 +252,7 @@ namespace Battleships
                 3 => "Cruiser",
                 _ => "Destroyer"
             };
-            IsHorizontal = isHorizontal;
+            IsHorizontal = false;
         }
         public string Name { get; }
         public int Size { get; }
