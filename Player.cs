@@ -128,5 +128,6 @@ namespace Battleships
         public GridCell[,] StrikeGrid { get; set; }
         public PlayerName PlayerName { get; }
         public string Token { get; }
+        public override string ToString() => PlayerName == PlayerName.Player1 ? "Player 1" : "Player 2";
     }
 }

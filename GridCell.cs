@@ -17,4 +17,15 @@
         public PlayerName? PlayerName { get; set; }
         public int ShipId { get; set; }
     }
+
+    internal struct Coordinate
+    {
+        public Coordinate(int column, int row)
+        {
+            Column = column;
+            Row = row;
+        }
+        public int Column { get; set; }
+        public int Row { get; set; }
+    }
 }
