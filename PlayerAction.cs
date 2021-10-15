@@ -28,18 +28,18 @@ namespace Battleships
             }
         }
 
-        private static Coordinate GetCoordinates(Ship ship)
+        private static Coordinate GetCoordinates(Ship ship = null)
         {
-            Console.WriteLine($"On which column do you want to place your {ship.Size}x {ship.Name}?");
+            Console.WriteLine($"On which column do you want to {(ship == null ? "strike" : $"place your {ship.Size}x {ship.Name}")}?");
             var col = Convert.ToInt32(Convert.ToChar(Console.ReadLine().ToUpper())) - AsciiOffset;
-            Console.WriteLine($"On which row do you want to place your {ship.Size}x {ship.Name}?");
+            Console.WriteLine($"On which row do you want to {(ship == null ? "strike" : $"place your {ship.Size}x {ship.Name}")}?");
             var row = Convert.ToInt32(Console.ReadLine());
             return new Coordinate(col, row);
         }
 
-        internal static void StrikeShip(Player player, GridCell targetCell)
+        internal static void StrikeShip(Player player)
         {
-            throw new NotImplementedException();
+            // var coordinates = GetCoordinates();
         }
 
         internal static void DrawShipGrid(Player player)
