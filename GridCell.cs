@@ -2,7 +2,7 @@
 {
     internal class GridCell
     {
-        public GridCell(int column, int row, CellType cellType, string token = "", PlayerName? playerName = null)
+        public GridCell(int row, int column, CellType cellType, string token = "", PlayerName? playerName = null)
         {
             Column = column;
             Row = row;

@@ -6,7 +6,6 @@ namespace Battleships
     {
         private static void Main()
         {
-            var isStrikePhase = false;
             var ships = new[]
             {
                 new Ship(2), new Ship(2), new Ship(3), new Ship(4), new Ship(5)
@@ -20,7 +19,8 @@ namespace Battleships
 
             Console.WriteLine("Strike Phase begins!");
             Console.WriteLine();
-            isStrikePhase = true;
+            Console.WriteLine($"{player1}'s turn");
+            PlayerAction.StrikeShip(player1, player2);
         }
 
         private static void PlaceShipsPhase(Player player, Ship[] ships)
