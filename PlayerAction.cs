@@ -2,6 +2,8 @@
 
 namespace Battleships
 {
+    // TODO: should be able to write to a grid when position is taken
+    // TODO: shouldn't be able to place ships next to each other
     internal static class PlayerAction
     {
         private const int UpperCaseAsciiOffset = 65;
@@ -33,9 +35,13 @@ namespace Battleships
 
         internal static void StrikeShip(Player player, Player opponent)
         {
+            DrawStrikeGrid(player);
             var coordinates = GetCoordinates();
             UpdateStrikeGrids(player, opponent, coordinates);
             DrawStrikeGrid(player);
+            Console.WriteLine("Press any key to continue...");
+            Console.ReadKey();
+            Console.Clear();
         }
 
         private static void UpdateStrikeGrids(Player player, Player opponent, Coordinate coordinates)
@@ -72,6 +78,9 @@ namespace Battleships
 
         private static void DrawStrikeGrid(Player player)
         {
+            Console.BackgroundColor =
+                player.PlayerName == PlayerName.Player1 ? ConsoleColor.Cyan : ConsoleColor.DarkBlue;
+            Console.ForegroundColor = ConsoleColor.White;
             var grid = player.StrikeGrid;
             var totalRows = grid.GetLength(0);
             var totalColumns = grid.GetLength(1);
@@ -87,10 +96,14 @@ namespace Battleships
                 }
                 Console.WriteLine(tmp);
             }
+            Console.ResetColor();
         }
 
         internal static void DrawShipGrid(Player player)
         {
+            Console.BackgroundColor =
+                player.PlayerName == PlayerName.Player1 ? ConsoleColor.Cyan : ConsoleColor.DarkBlue;
+            Console.ForegroundColor = ConsoleColor.White;
             var grid = player.ShipGrid;
             var totalRows = grid.GetLength(0);
             var totalColumns = grid.GetLength(1);
@@ -106,6 +119,7 @@ namespace Battleships
                 }
                 Console.WriteLine(tmp);
             }
+            Console.ResetColor();
         }
         
         // private methods below
