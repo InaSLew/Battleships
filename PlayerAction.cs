@@ -2,7 +2,6 @@
 
 namespace Battleships
 {
-    // TODO: should be able to write to a grid when position is taken
     // TODO: shouldn't be able to place ships next to each other
     internal static class PlayerAction
     {
@@ -15,7 +14,7 @@ namespace Battleships
             var ships = player.Ships;
             foreach (var ship in ships)
             {
-                var coordinates = GetCoordinates(ship);
+                var coordinates = GetCoordinates(player.ShipGrid, ship);
                 Console.WriteLine("Horizontal? y/n");
                 var isHorizontal = Console.ReadLine() == "y";
                 ship.IsHorizontal = isHorizontal;
@@ -36,7 +35,7 @@ namespace Battleships
         internal static void StrikeShip(Player player, Player opponent)
         {
             DrawStrikeGrid(player);
-            var coordinates = GetCoordinates();
+            var coordinates = GetCoordinates(player.StrikeGrid);
             UpdateStrikeGrids(player, opponent, coordinates);
             DrawStrikeGrid(player);
             Console.WriteLine("Press any key to continue...");
@@ -127,22 +126,45 @@ namespace Battleships
         // NOTE
         // Currently adding the offsets in GetCoordinates();
         // everytime it's called, the output is being used to write to a grid
-        private static Coordinate GetCoordinates(Ship ship = null)
+        private static Coordinate GetCoordinates(GridCell[,] grid, Ship ship = null)
         {
+            var isTaken = true;
             Console.WriteLine($"Where do you want to {(ship == null ? "strike" : $"place your {ship.Size}x {ship.Name}")}?");
             Console.WriteLine("Example: type C9 or c9 (case-insensitive)");
             var input = Console.ReadLine();
-            while (string.IsNullOrEmpty(input) || !IsValid(input))
+            while (isTaken)
             {
-                Console.WriteLine("Invalid input, try again :)");
-                input = Console.ReadLine();
+                while (string.IsNullOrEmpty(input) || !IsValid(input))
+                {
+                    Console.WriteLine("Invalid input, try again :)");
+                    input = Console.ReadLine();
+                }
+
+                isTaken = CheckIsTaken(grid, input);
+                if (isTaken)
+                {
+                    Console.WriteLine("Position taken, try again :)");
+                    input = Console.ReadLine();
+                }
             }
             return new Coordinate(Convert.ToInt32(char.ToUpper(input[0])) - UpperCaseAsciiOffset + ColumnOffset, Convert.ToInt32(input[1].ToString()) + RowOffset);
         }
 
+        private static bool CheckIsTaken(GridCell[,]grid, string input)
+        {
+                return grid[Convert.ToInt32(input[1].ToString()) + RowOffset,
+                    Convert.ToInt32(char.ToUpper(input[0])) - UpperCaseAsciiOffset + ColumnOffset].CellType != CellType.Undecided;
+        }
+
         private static bool IsValid(string input)
         {
-            return input.Length == ValidInputLength && char.IsLetter(input[0]) && char.IsDigit(input[1]);
+            return input.Length == ValidInputLength && (char.IsLetter(input[0]) && IsInCharRange(input[0])) && char.IsDigit(input[1]);
+        }
+
+        private static bool IsInCharRange(char c)
+        {
+            var convertedChar = Convert.ToInt32(Char.ToUpper(c));
+            return (convertedChar - UpperCaseAsciiOffset >= 0) && (convertedChar - UpperCaseAsciiOffset <= 9);
         }
     }
 }
