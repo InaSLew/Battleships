@@ -18,11 +18,13 @@ namespace Battleships
                 ship.IsHorizontal = isHorizontal;
                 for (var i = 0; i < ship.Size; i++)
                 {
-                    var targetCell = isHorizontal
-                        ? new GridCell(coordinates.Row, coordinates.Column + i, CellType.ActiveShip)
-                        : new GridCell(coordinates.Row + i, coordinates.Column, CellType.ActiveShip);
-                    targetCell.ShipId = ship.id;
-                    WriteShipGrid(player, targetCell);
+                    var target = isHorizontal
+                        ? player.ShipGrid[coordinates.Row, coordinates.Column + i]
+                        : player.ShipGrid[coordinates.Row + i, coordinates.Column];
+                    target.PlayerName = player.PlayerName;
+                    target.CellType = CellType.ActiveShip;
+                    target.ShipId = ship.id;
+                    target.Token = player.Token;
                 }
                 DrawShipGrid(player);
             }
@@ -32,7 +34,7 @@ namespace Battleships
         {
             var coordinates = GetCoordinates();
             UpdateStrikeGrids(player, opponent, coordinates);
-            DrawStrikeWGrid(player);
+            DrawStrikeGrid(player);
         }
         
         private static void UpdateStrikeGrids(Player player, Player opponent, Coordinate coordinates)
@@ -47,8 +49,7 @@ namespace Battleships
                 Console.ResetColor();
                 target.CellType = CellType.DestroyedShip;
                 targetOnStrikeGrid.CellType = CellType.Hit;
-                WriteStrikeGrid(player, targetOnStrikeGrid);
-                WriteStrikeGrid(opponent, target);
+                targetOnStrikeGrid.Token = "X";
             }
             else
             {
@@ -57,11 +58,11 @@ namespace Battleships
                 Console.WriteLine("Miss!");
                 Console.ResetColor();
                 targetOnStrikeGrid.CellType = CellType.Miss;
-                WriteStrikeGrid(player, targetOnStrikeGrid);
+                targetOnStrikeGrid.Token = "O";
             }
         }
-        
-        internal static void DrawStrikeWGrid(Player player)
+
+        internal static void DrawStrikeGrid(Player player)
         {
             var grid = player.StrikeGrid;
             var totalRows = grid.GetLength(0);
@@ -111,35 +112,6 @@ namespace Battleships
             Console.WriteLine($"On which row do you want to {(ship == null ? "strike" : $"place your {ship.Size}x {ship.Name}")}?");
             var row = Convert.ToInt32(Console.ReadLine()) + RowOffset;
             return new Coordinate(col, row);
-        }
-        private static void WriteShipGrid(Player player, GridCell cellToDraw)
-        {
-            var grid = player.ShipGrid;
-            // var targetCol = cellToDraw.Column + ColumnOffset;
-            // var targetRow = cellToDraw.Row + RowOffset;
-            var targetCol = cellToDraw.Column;
-            var targetRow = cellToDraw.Row;
-            if (grid[targetRow, targetCol].Token == "")
-            {
-                grid[targetRow, targetCol].Token = player.Token;
-                grid[targetRow, targetCol].PlayerName = player.PlayerName;
-                grid[targetRow, targetCol].CellType = CellType.ActiveShip;
-                grid[targetRow, targetCol].ShipId = cellToDraw.ShipId;
-            }
-            else Console.WriteLine("Oops, position taken!");
-        }
-        private static void WriteStrikeGrid(Player player, GridCell cellToDraw)
-        {
-            var grid = player.StrikeGrid;
-            var targetCol = cellToDraw.Column;
-            var targetRow = cellToDraw.Row;
-            if (grid[targetRow, targetCol].Token == "")
-            {
-                grid[targetRow, targetCol].Token = player.Token;
-                grid[targetRow, targetCol].PlayerName = player.PlayerName;
-                grid[targetRow, targetCol].ShipId = cellToDraw.ShipId;
-            }
-            else Console.WriteLine("Oops, position taken!");
         }
     }
 }
