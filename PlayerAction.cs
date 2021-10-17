@@ -2,11 +2,12 @@
 
 namespace Battleships
 {
-    internal class PlayerAction
+    internal static class PlayerAction
     {
-        private const int AsciiOffset = 65;
+        private const int UpperCaseAsciiOffset = 65;
         private const int ColumnOffset = 1;
         private const int RowOffset = 1;
+        private const int ValidInputLength = 2;
         internal static void PlaceShips(Player player)
         {
             var ships = player.Ships;
@@ -23,7 +24,7 @@ namespace Battleships
                         : player.ShipGrid[coordinates.Row + i, coordinates.Column];
                     target.PlayerName = player.PlayerName;
                     target.CellType = CellType.ActiveShip;
-                    target.ShipId = ship.id;
+                    target.ShipId = ship.Id;
                     target.Token = player.Token;
                 }
                 DrawShipGrid(player);
@@ -46,11 +47,7 @@ namespace Battleships
                 Console.BackgroundColor = ConsoleColor.DarkGreen;
                 Console.ForegroundColor = ConsoleColor.White;
                 Console.WriteLine("Hit!");
-                
-                var hitShip = player.Ships[target.ShipId];
-                hitShip.TakeHit();
-                if (hitShip.IsSunken) Console.WriteLine("Ship sunken!");
-                
+                ShipTakeHit(player.Ships[target.ShipId]);
                 Console.ResetColor();
                 target.CellType = CellType.DestroyedShip;
                 targetOnStrikeGrid.CellType = CellType.Hit;
@@ -67,7 +64,13 @@ namespace Battleships
             }
         }
 
-        internal static void DrawStrikeGrid(Player player)
+        private static void ShipTakeHit(Ship hitShip)
+        {
+            hitShip.TakeHit();
+            if (hitShip.IsSunken) Console.WriteLine("Ship sunken!");
+        }
+
+        private static void DrawStrikeGrid(Player player)
         {
             var grid = player.StrikeGrid;
             var totalRows = grid.GetLength(0);
@@ -77,7 +80,7 @@ namespace Battleships
                 var tmp = "";
                 for (var colIdx = 0; colIdx < totalColumns; colIdx++)
                 {
-                    if (rowIdx == 0 && colIdx >= 1) tmp += $"_{Convert.ToChar(colIdx - ColumnOffset + AsciiOffset)}|";
+                    if (rowIdx == 0 && colIdx >= 1) tmp += $"_{Convert.ToChar(colIdx - ColumnOffset + UpperCaseAsciiOffset)}|";
                     else if (colIdx == 0 && rowIdx >= 1) tmp += $"_{rowIdx - RowOffset}|";
                     else if (grid[rowIdx, colIdx].Token != "") tmp += $"{grid[rowIdx, colIdx].Token}_|";
                     else tmp += "__|";
@@ -96,7 +99,7 @@ namespace Battleships
                 var tmp = "";
                 for (var colIdx = 0; colIdx < totalColumns; colIdx++)
                 {
-                    if (rowIdx == 0 && colIdx >= 1) tmp += $"_{Convert.ToChar(colIdx - ColumnOffset + AsciiOffset)}|";
+                    if (rowIdx == 0 && colIdx >= 1) tmp += $"_{Convert.ToChar(colIdx - ColumnOffset + UpperCaseAsciiOffset)}|";
                     else if (colIdx == 0 && rowIdx >= 1) tmp += $"_{rowIdx - RowOffset}|";
                     else if (grid[rowIdx, colIdx].Token != "") tmp += $"{grid[rowIdx, colIdx].Token}_|";
                     else tmp += "__|";
@@ -120,12 +123,12 @@ namespace Battleships
                 Console.WriteLine("Invalid input, try again :)");
                 input = Console.ReadLine();
             }
-            return new Coordinate(Convert.ToInt32(char.ToUpper(input[0])) - AsciiOffset + ColumnOffset, Convert.ToInt32(input[1].ToString()) + RowOffset);
+            return new Coordinate(Convert.ToInt32(char.ToUpper(input[0])) - UpperCaseAsciiOffset + ColumnOffset, Convert.ToInt32(input[1].ToString()) + RowOffset);
         }
 
         private static bool IsValid(string input)
         {
-            return input.Length == 2 && char.IsLetter(input[0]) && char.IsDigit(input[1]);
+            return input.Length == ValidInputLength && char.IsLetter(input[0]) && char.IsDigit(input[1]);
         }
     }
 }

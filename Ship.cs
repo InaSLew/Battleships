@@ -1,11 +1,11 @@
 ﻿namespace Battleships
 {
-    public class Ship
+    internal class Ship
     {
-        public readonly int id;
+        internal readonly int Id;
         public Ship(int size, int id)
         {
-            this.id = id;
+            Id = id;
             Size = size;
             Name = Size switch
             {
@@ -17,11 +17,11 @@
             IsHorizontal = false;
             Health = size;
         }
-        public string Name { get; }
-        public int Size { get; }
-        public bool IsHorizontal { get; set; }
+        internal string Name { get; }
+        internal int Size { get; }
+        internal bool IsHorizontal { get; set; }
         private int Health { get; set; }
-        public bool IsSunken => Health == 0;
-        public void TakeHit() => Health -= 1;
+        internal bool IsSunken => Health == 0;
+        internal void TakeHit() => Health -= 1;
     }
 }

@@ -10,12 +10,13 @@
             CellType = cellType;
             PlayerName = playerName;
         }
-        public int Column { get; }
-        public int Row { get; }
-        public string Token { get; set; }
-        public CellType CellType { get; set; }
-        public PlayerName? PlayerName { get; set; }
-        public int ShipId { get; set; }
+
+        private int Column { get; }
+        private int Row { get; }
+        internal string Token { get; set; }
+        internal CellType CellType { get; set; }
+        internal PlayerName? PlayerName { get; set; }
+        internal int ShipId { get; set; }
     }
 
     internal struct Coordinate
@@ -25,7 +26,7 @@
             Column = column;
             Row = row;
         }
-        public int Column { get; set; }
-        public int Row { get; set; }
+        internal int Column { get; set; }
+        internal int Row { get; set; }
     }
 }

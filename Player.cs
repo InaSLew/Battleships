@@ -132,11 +132,11 @@ namespace Battleships
                 new Ship(5, 4)
             };
         }
-        public GridCell[,] ShipGrid { get; set; }
-        public GridCell[,] StrikeGrid { get; set; }
-        public PlayerName PlayerName { get; }
-        public Ship[] Ships { get; set; }
-        public string Token { get; }
+        internal GridCell[,] ShipGrid { get; set; }
+        internal GridCell[,] StrikeGrid { get; set; }
+        internal PlayerName PlayerName { get; }
+        internal Ship[] Ships { get; set; }
+        internal string Token { get; }
         public override string ToString() => PlayerName == PlayerName.Player1 ? "Player 1" : "Player 2";
     }
 }

@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Linq;
 
 namespace Battleships
 {
@@ -6,8 +7,7 @@ namespace Battleships
     {
         private static void Main()
         {
-            var isGameOver = false;
-
+            Player currentPlayer;
             var player1 = new Player(PlayerName.Player1);
             PlaceShipsPhase(player1);
 
@@ -16,19 +16,20 @@ namespace Battleships
 
             Console.WriteLine("Strike Phase begins!");
             Console.WriteLine();
-            while (!isGameOver)
+            while (true)
             {
                 Console.WriteLine($"{player1}'s turn");
+                currentPlayer = player1;
                 PlayerAction.StrikeShip(player1, player2);
+                if (CheckIfAllShipsSunken(player1)) break;
+                
                 Console.WriteLine($"{player2}'s turn");
+                currentPlayer = player2;
                 PlayerAction.StrikeShip(player2, player1);
-                Console.WriteLine($"{player1}'s turn");
-                PlayerAction.StrikeShip(player1, player2);
-                Console.WriteLine($"{player2}'s turn");
-                PlayerAction.StrikeShip(player2, player1);
-                isGameOver = true;
+                if (CheckIfAllShipsSunken(player2)) break;
             }
-            
+
+            Console.WriteLine($"{currentPlayer}'s victory!");
         }
 
         private static void PlaceShipsPhase(Player player)
@@ -50,6 +51,11 @@ namespace Battleships
             Console.WriteLine("Press any key to clear the console");
             Console.ReadKey();
             Console.Clear();
+        }
+        
+        private static bool CheckIfAllShipsSunken(Player player)
+        {
+            return player.Ships.ToList().All(x => x.IsSunken);
         }
     }
 }
