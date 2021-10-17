@@ -3,10 +3,9 @@
     public class Ship
     {
         public readonly int id;
-        private static int nextId;
-        public Ship(int size)
+        public Ship(int size, int id)
         {
-            id = nextId++;
+            this.id = id;
             Size = size;
             Name = Size switch
             {
@@ -16,9 +15,13 @@
                 _ => "Destroyer"
             };
             IsHorizontal = false;
+            Health = size;
         }
         public string Name { get; }
         public int Size { get; }
         public bool IsHorizontal { get; set; }
+        private int Health { get; set; }
+        public bool IsSunken => Health == 0;
+        public void TakeHit() => Health -= 1;
     }
 }

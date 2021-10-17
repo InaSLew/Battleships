@@ -7,16 +7,12 @@ namespace Battleships
         private static void Main()
         {
             var isGameOver = false;
-            var ships = new[]
-            {
-                new Ship(2), new Ship(2), new Ship(3), new Ship(4), new Ship(5)
-            };
-            
+
             var player1 = new Player(PlayerName.Player1);
-            PlaceShipsPhase(player1, ships);
+            PlaceShipsPhase(player1);
 
             var player2 = new Player(PlayerName.Player2);
-            PlaceShipsPhase(player2, ships);
+            PlaceShipsPhase(player2);
 
             Console.WriteLine("Strike Phase begins!");
             Console.WriteLine();
@@ -26,17 +22,21 @@ namespace Battleships
                 PlayerAction.StrikeShip(player1, player2);
                 Console.WriteLine($"{player2}'s turn");
                 PlayerAction.StrikeShip(player2, player1);
+                Console.WriteLine($"{player1}'s turn");
+                PlayerAction.StrikeShip(player1, player2);
+                Console.WriteLine($"{player2}'s turn");
+                PlayerAction.StrikeShip(player2, player1);
                 isGameOver = true;
             }
             
         }
 
-        private static void PlaceShipsPhase(Player player, Ship[] ships)
+        private static void PlaceShipsPhase(Player player)
         {
             Console.WriteLine($"{player}'s turn to place ships");
             Console.WriteLine();
             PlayerAction.DrawShipGrid(player);
-            PlayerAction.PlaceShips(player, ships);
+            PlayerAction.PlaceShips(player);
             Console.WriteLine($"End of {player}'s turn to place ships");
             HandleEndOfPhase();
         }

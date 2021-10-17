@@ -7,11 +7,11 @@ namespace Battleships
         private const int AsciiOffset = 65;
         private const int ColumnOffset = 1;
         private const int RowOffset = 1;
-        internal static void PlaceShips(Player player, Ship[] ships)
+        internal static void PlaceShips(Player player)
         {
+            var ships = player.Ships;
             foreach (var ship in ships)
             {
-                // TODO input validation to avoid incorrect format exception
                 var coordinates = GetCoordinates(ship);
                 Console.WriteLine("Horizontal? y/n");
                 var isHorizontal = Console.ReadLine() == "y";
@@ -36,7 +36,7 @@ namespace Battleships
             UpdateStrikeGrids(player, opponent, coordinates);
             DrawStrikeGrid(player);
         }
-        
+
         private static void UpdateStrikeGrids(Player player, Player opponent, Coordinate coordinates)
         {
             var target = opponent.ShipGrid[coordinates.Row, coordinates.Column];
@@ -46,6 +46,11 @@ namespace Battleships
                 Console.BackgroundColor = ConsoleColor.DarkGreen;
                 Console.ForegroundColor = ConsoleColor.White;
                 Console.WriteLine("Hit!");
+                
+                var hitShip = player.Ships[target.ShipId];
+                hitShip.TakeHit();
+                if (hitShip.IsSunken) Console.WriteLine("Ship sunken!");
+                
                 Console.ResetColor();
                 target.CellType = CellType.DestroyedShip;
                 targetOnStrikeGrid.CellType = CellType.Hit;
