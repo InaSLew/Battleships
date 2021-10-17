@@ -7,7 +7,6 @@ namespace Battleships
     {
         private static void Main()
         {
-            Player currentPlayer;
             var player1 = new Player(PlayerName.Player1);
             PlaceShipsPhase(player1);
 
@@ -16,20 +15,28 @@ namespace Battleships
 
             Console.WriteLine("Strike Phase begins!");
             Console.WriteLine();
-            while (true)
-            {
-                Console.WriteLine($"{player1}'s turn");
-                currentPlayer = player1;
-                PlayerAction.StrikeShip(player1, player2);
-                if (CheckIfAllShipsSunken(player1)) break;
-                
-                Console.WriteLine($"{player2}'s turn");
-                currentPlayer = player2;
-                PlayerAction.StrikeShip(player2, player1);
-                if (CheckIfAllShipsSunken(player2)) break;
-            }
 
+            var currentPlayer = player1;
+            var opponent = player2;
+            while (!(CheckIfAllShipsSunken(opponent)))
+            {
+                var isHit = StrikePhase(currentPlayer, opponent);
+                while (!(CheckIfAllShipsSunken(opponent)) && isHit)
+                {
+                    isHit = StrikePhase(currentPlayer, opponent);
+                }
+
+                if (isHit) continue;
+                currentPlayer = currentPlayer.PlayerName == PlayerName.Player1 ? player2 : player1;
+                opponent = opponent.PlayerName == PlayerName.Player1 ? player2 : player1;
+            }
             Console.WriteLine($"{currentPlayer}'s victory!");
+        }
+
+        private static bool StrikePhase(Player currentPlayer, Player opponent)
+        {
+            Console.WriteLine($"{currentPlayer}'s turn");
+            return PlayerAction.StrikeShip(currentPlayer, opponent);
         }
 
         private static void PlaceShipsPhase(Player player)

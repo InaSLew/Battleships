@@ -2,7 +2,6 @@
 
 namespace Battleships
 {
-    // TODO: shouldn't be able to place ships next to each other
     internal static class PlayerAction
     {
         private const int UpperCaseAsciiOffset = 65;
@@ -32,19 +31,20 @@ namespace Battleships
             }
         }
 
-        internal static void StrikeShip(Player player, Player opponent)
+        internal static bool StrikeShip(Player player, Player opponent)
         {
-            DrawStrikeGrid(player);
+            DrawStrikeGrid(player, opponent);
             var coordinates = GetCoordinates(player.StrikeGrid);
-            UpdateStrikeGrids(player, opponent, coordinates);
-            DrawStrikeGrid(player);
+            var isHit = UpdateStrikeGrids(player, opponent, coordinates);
+            DrawStrikeGrid(player, opponent);
             Console.WriteLine("Press any key to continue...");
             Console.ReadKey();
-            Console.Clear();
+            return isHit;
         }
 
-        private static void UpdateStrikeGrids(Player player, Player opponent, Coordinate coordinates)
+        private static bool UpdateStrikeGrids(Player player, Player opponent, Coordinate coordinates)
         {
+            bool result;
             var target = opponent.ShipGrid[coordinates.Row, coordinates.Column];
             var targetOnStrikeGrid = player.StrikeGrid[coordinates.Row, coordinates.Column];
             if (target.CellType == CellType.ActiveShip)
@@ -52,11 +52,13 @@ namespace Battleships
                 Console.BackgroundColor = ConsoleColor.DarkGreen;
                 Console.ForegroundColor = ConsoleColor.White;
                 Console.WriteLine("Hit!");
-                ShipTakeHit(player.Ships[target.ShipId]);
+                ShipTakeHit(opponent.Ships[target.ShipId]);
                 Console.ResetColor();
                 target.CellType = CellType.DestroyedShip;
                 targetOnStrikeGrid.CellType = CellType.Hit;
                 targetOnStrikeGrid.Token = "X";
+                targetOnStrikeGrid.ShipId = target.ShipId;
+                result = true;
             }
             else
             {
@@ -66,7 +68,10 @@ namespace Battleships
                 Console.ResetColor();
                 targetOnStrikeGrid.CellType = CellType.Miss;
                 targetOnStrikeGrid.Token = "O";
+                result = false;
             }
+
+            return result;
         }
 
         private static void ShipTakeHit(Ship hitShip)
@@ -75,34 +80,37 @@ namespace Battleships
             if (hitShip.IsSunken) Console.WriteLine("Ship sunken!");
         }
 
-        private static void DrawStrikeGrid(Player player)
+        private static void DrawStrikeGrid(Player player, Player opponent)
         {
-            Console.BackgroundColor =
-                player.PlayerName == PlayerName.Player1 ? ConsoleColor.Cyan : ConsoleColor.DarkBlue;
-            Console.ForegroundColor = ConsoleColor.White;
             var grid = player.StrikeGrid;
             var totalRows = grid.GetLength(0);
             var totalColumns = grid.GetLength(1);
             for (var rowIdx = 0; rowIdx < totalRows; rowIdx++)
             {
-                var tmp = "";
                 for (var colIdx = 0; colIdx < totalColumns; colIdx++)
                 {
-                    if (rowIdx == 0 && colIdx >= 1) tmp += $"_{Convert.ToChar(colIdx - ColumnOffset + UpperCaseAsciiOffset)}|";
-                    else if (colIdx == 0 && rowIdx >= 1) tmp += $"_{rowIdx - RowOffset}|";
-                    else if (grid[rowIdx, colIdx].Token != "") tmp += $"{grid[rowIdx, colIdx].Token}_|";
-                    else tmp += "__|";
+                    if (rowIdx == 0 && colIdx >= 1) Console.Write($"_{Convert.ToChar(colIdx - ColumnOffset + UpperCaseAsciiOffset)}|");
+                    else if (colIdx == 0 && rowIdx >= 1) Console.Write($"_{rowIdx - RowOffset}|");
+                    else if (grid[rowIdx, colIdx].Token != "")
+                    {
+                        var cell = grid[rowIdx, colIdx];
+                        if (cell.CellType == CellType.Hit && opponent.Ships[cell.ShipId].IsSunken)
+                        {
+                            Console.BackgroundColor = ConsoleColor.Green;
+                            Console.ForegroundColor = ConsoleColor.White;
+                            Console.Write($"{grid[rowIdx, colIdx].Token}_|");
+                            Console.ResetColor();
+                        }
+                        else Console.Write($"{grid[rowIdx, colIdx].Token}_|");
+                    }
+                    else Console.Write("__|");
                 }
-                Console.WriteLine(tmp);
+                Console.Write("\n");
             }
-            Console.ResetColor();
         }
 
         internal static void DrawShipGrid(Player player)
         {
-            Console.BackgroundColor =
-                player.PlayerName == PlayerName.Player1 ? ConsoleColor.Cyan : ConsoleColor.DarkBlue;
-            Console.ForegroundColor = ConsoleColor.White;
             var grid = player.ShipGrid;
             var totalRows = grid.GetLength(0);
             var totalColumns = grid.GetLength(1);
@@ -118,7 +126,6 @@ namespace Battleships
                 }
                 Console.WriteLine(tmp);
             }
-            Console.ResetColor();
         }
         
         // private methods below
