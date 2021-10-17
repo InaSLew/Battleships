@@ -107,11 +107,20 @@ namespace Battleships
         // everytime it's called, the output is being used to write to a grid
         private static Coordinate GetCoordinates(Ship ship = null)
         {
-            Console.WriteLine($"On which column do you want to {(ship == null ? "strike" : $"place your {ship.Size}x {ship.Name}")}?");
-            var col = Convert.ToInt32(Convert.ToChar(Console.ReadLine().ToUpper())) - AsciiOffset + ColumnOffset;
-            Console.WriteLine($"On which row do you want to {(ship == null ? "strike" : $"place your {ship.Size}x {ship.Name}")}?");
-            var row = Convert.ToInt32(Console.ReadLine()) + RowOffset;
-            return new Coordinate(col, row);
+            Console.WriteLine($"Where do you want to {(ship == null ? "strike" : $"place your {ship.Size}x {ship.Name}")}?");
+            Console.WriteLine("Example: type C9 or c9 (case-insensitive)");
+            var input = Console.ReadLine();
+            while (string.IsNullOrEmpty(input) || !IsValid(input))
+            {
+                Console.WriteLine("Invalid input, try again :)");
+                input = Console.ReadLine();
+            }
+            return new Coordinate(Convert.ToInt32(char.ToUpper(input[0])) - AsciiOffset + ColumnOffset, Convert.ToInt32(input[1].ToString()) + RowOffset);
+        }
+
+        private static bool IsValid(string input)
+        {
+            return input.Length == 2 && char.IsLetter(input[0]) && char.IsDigit(input[1]);
         }
     }
 }
